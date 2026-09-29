@@ -1,6 +1,6 @@
 import { extractOfferId } from '../utils/extractOfferId.js';
 import { fetchAndNormalize1688Product } from '../services/apify1688.js';
-import { ProductRequestSchema } from 'cf-engine-shared/schemas/product.schema.js';
+import { ProductRequestSchema } from '@cf-engine/shared';
 
 export async function productRoutes(fastify, options) {
   fastify.post('/api/1688/product', async (request, reply) => {

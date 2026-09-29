@@ -1,6 +1,15 @@
 # Railway Deployment Guide
 
-This document covers deployment guidelines and port binding configurations for deploying the `cf-engine` Fastify backend service on Railway.
+## IMPORTANT: Railway Root Directory
+
+The Railway service for the backend **MUST** have the Root Directory set to the **REPO ROOT** (empty or `/`), **NOT** `backend/`. The workspace installation requires access to both `backend/` and `shared/`.
+
+### Steps:
+1. Railway → backend service → Settings → Source
+2. Root Directory: leave empty (repo root)
+3. Save and redeploy
+
+---
 
 ## Port and Host Configuration
 

@@ -1,11 +1,9 @@
 {
   "name": "cf-engine",
   "version": "1.0.0",
-  "description": "1688 Product Scraper API Workspace Root",
-  "type": "module",
   "private": true,
   "workspaces": [
-    "shared",
-    "backend"
+    "backend",
+    "shared"
   ]
 }

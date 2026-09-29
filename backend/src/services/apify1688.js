@@ -1,5 +1,5 @@
 import { ApifyClient } from 'apify-client';
-import { ProductSchema } from 'cf-engine-shared/schemas/product.schema.js';
+import { ProductSchema } from '@cf-engine/shared';
 
 export function normalizeApifyData(rawData, offerId) {
   try {

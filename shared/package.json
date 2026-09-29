@@ -1,5 +1,5 @@
 {
-  "name": "cf-engine-shared",
+  "name": "@cf-engine/shared",
   "version": "1.0.0",
   "type": "module",
   "main": "./schemas/product.schema.js",
