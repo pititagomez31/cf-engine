@@ -156,7 +156,7 @@ describe('Fastify Server Routes', () => {
     });
 
     assert.equal(response.statusCode, 200);
-    assert.deepEqual(capturedInput, { productUrls: ['https://detail.1688.com/offer/123456789.html'] });
+    assert.deepEqual(capturedInput, { offerIds: ['123456789'] });
     const body = response.json();
     assert.equal(body.success, true);
     assert.equal(body.product.id, '123456789');

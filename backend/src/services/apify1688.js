@@ -132,7 +132,7 @@ export async function fetchAndNormalize1688Product(url, offerId, options = {}) {
   let run;
   try {
     const input = {
-      productUrls: [url]
+      offerIds: [offerId]
     };
 
     run = await client.actor(actorId).call(input);
