@@ -2,6 +2,12 @@
   "name": "cf-engine-shared",
   "version": "1.0.0",
   "type": "module",
+  "main": "./schemas/product.schema.js",
+  "exports": {
+    ".": "./schemas/product.schema.js",
+    "./schemas/product.schema.js": "./schemas/product.schema.js"
+  },
+  "private": true,
   "dependencies": {
     "zod": "^3.24.2"
   }
