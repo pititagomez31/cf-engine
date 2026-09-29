@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@cf-engine/shared": "*",
+    "@fastify/cors": "^11.3.0",
     "@supabase/supabase-js": "^2.117.2",
     "apify-client": "^2.11.3",
     "dotenv": "^16.4.7",

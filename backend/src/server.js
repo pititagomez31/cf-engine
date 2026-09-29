@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import { productRoutes } from './routes/products.js';
 
 dotenv.config();
@@ -7,6 +8,16 @@ dotenv.config();
 export async function buildApp(options = {}) {
   const fastify = Fastify({
     logger: options.logger ?? true
+  });
+
+  // Register CORS before registering routes
+  await fastify.register(cors, {
+    origin: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
+      : true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+    credentials: false
   });
 
   // Health check route

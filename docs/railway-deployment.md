@@ -11,6 +11,18 @@ The Railway service for the backend **MUST** have the Root Directory set to the 
 
 ---
 
+## CORS Configuration
+
+Because the frontend (`https://frontend-production-c451.up.railway.app`) and backend (`https://backend-production-e44c.up.railway.app`) reside on different Railway domains, CORS must be configured on the backend.
+
+1. Go to Railway → backend service → **Variables**.
+2. Add environment variable:
+   - **`CORS_ORIGINS`**: `https://frontend-production-c451.up.railway.app`
+3. Railway automatically redeploys the backend upon saving variables for the change to take effect.
+4. If `CORS_ORIGINS` is unset, the backend falls back to allowing all origins (for local development).
+
+---
+
 ## Port and Host Configuration
 
 ### 1. Dynamic `PORT` Environment Variable
@@ -36,3 +48,4 @@ Ensure the following variables are configured in Railway's Service Settings:
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_DB_URL`
+- `CORS_ORIGINS`
