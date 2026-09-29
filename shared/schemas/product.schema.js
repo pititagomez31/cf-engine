@@ -1,8 +1,10 @@
 import { z } from 'zod';
 
 export const SupplierSchema = z.object({
+  id: z.string().nullable().default(null),
   name: z.string().nullable().default(null),
-  location: z.string().nullable().default(null)
+  location: z.string().nullable().default(null),
+  province: z.string().nullable().default(null)
 });
 
 export const VariantSchema = z.object({

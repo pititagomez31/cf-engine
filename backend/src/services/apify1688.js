@@ -6,42 +6,49 @@ export function normalizeApifyData(rawData, offerId) {
     const item = Array.isArray(rawData) ? rawData[0] || {} : rawData;
 
     // Standardize fields
-    const id = String(item.id || item.offerId || offerId);
+    const id = String(item.offerId || item.id || offerId);
     const title = item.title || item.subject || item.name || '';
 
     // Images
     let images = [];
-    if (Array.isArray(item.images)) {
+    if (Array.isArray(item.mainImages) && item.mainImages.length > 0) {
+      images = item.mainImages;
+    } else if (Array.isArray(item.images) && item.images.length > 0) {
       images = item.images;
-    } else if (Array.isArray(item.imageUrls)) {
+    } else if (Array.isArray(item.imageUrls) && item.imageUrls.length > 0) {
       images = item.imageUrls;
     } else if (item.mainImage || item.image) {
       images = [item.mainImage || item.image];
     }
 
-    // Supplier
-    const supplierName = item.supplier?.name || item.companyName || item.sellerName || item.seller?.name || null;
-    const supplierLocation = item.supplier?.location || item.location || item.city || item.province || item.seller?.location || null;
+    // Supplier (4 fields)
+    const supplierId = item.sellerUserId ? String(item.sellerUserId) : (item.sellerMemberId ? String(item.sellerMemberId) : null);
+    const supplierName = item.sellerCompanyName || item.supplier?.name || item.companyName || item.sellerName || item.seller?.name || null;
+    const supplierLocation = item.sellerProvince || item.supplier?.location || item.location || item.city || item.province || item.seller?.location || null;
+    const supplierProvince = item.sellerProvince || item.supplier?.province || item.province || null;
+
     const supplier = {
+      id: supplierId,
       name: supplierName,
-      location: supplierLocation
+      location: supplierLocation,
+      province: supplierProvince
     };
 
     // Variants
     let variants = [];
-    const rawVariants = item.variants || item.skus || item.skuList || [];
+    const rawVariants = item.skus || item.variants || item.skuList || [];
     if (Array.isArray(rawVariants) && rawVariants.length > 0) {
       variants = rawVariants.map(v => ({
         sku: String(v.skuId || v.sku || v.id || v.name || ''),
-        price: Number(v.price || v.consignPrice || v.salePrice || item.price || 0),
+        price: Number(v.price || v.consignPrice || v.salePrice || item.priceMin || item.price || 0),
         stock: Number(v.stock || v.canBookCount || v.amount || 0)
       }));
     }
 
     // Pricing & Tiers
     const variantPrices = variants.map(v => v.price).filter(p => !isNaN(p));
-    const rawMin = item.pricing?.min ?? item.minPrice ?? item.price;
-    const rawMax = item.pricing?.max ?? item.maxPrice;
+    const rawMin = item.priceMin ?? item.pricing?.min ?? item.minPrice ?? item.price;
+    const rawMax = item.priceMax ?? item.pricing?.max ?? item.maxPrice;
 
     const minPrice = rawMin !== undefined ? Number(rawMin) : (variantPrices.length ? Math.min(...variantPrices) : 0);
     const maxPrice = rawMax !== undefined ? Number(rawMax) : (variantPrices.length ? Math.max(...variantPrices) : minPrice);
@@ -87,6 +94,23 @@ export function normalizeApifyData(rawData, offerId) {
 
     return normalized;
   } catch (err) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[NORMALIZATION_ERROR] Zod validation or processing failed:');
+      if (err.errors || err.issues) {
+        console.error('Zod errors:', JSON.stringify(err.errors || err.issues, null, 2));
+      } else if (err.cause?.errors || err.cause?.issues) {
+        console.error('Zod cause errors:', JSON.stringify(err.cause.errors || err.cause.issues, null, 2));
+      } else {
+        console.error('Error details:', err.message || err);
+      }
+      try {
+        const rawString = JSON.stringify(rawData);
+        console.error('Raw item (truncated):', rawString.slice(0, 2000));
+      } catch (e) {
+        console.error('Raw item (non-serializable):', String(rawData).slice(0, 2000));
+      }
+    }
+
     const normErr = new Error('NORMALIZATION_ERROR');
     normErr.cause = err;
     throw normErr;
@@ -108,8 +132,7 @@ export async function fetchAndNormalize1688Product(url, offerId, options = {}) {
   let run;
   try {
     const input = {
-      productUrls: [url],
-      offerIds: [offerId]
+      productUrls: [url]
     };
 
     run = await client.actor(actorId).call(input);

@@ -32,31 +32,37 @@ describe('extractOfferId utility', () => {
 });
 
 describe('normalizeApifyData', () => {
-  test('normalizes raw scraper data correctly', () => {
-    const raw = {
-      id: '123456789',
-      title: 'Test Wholesale Product',
-      images: ['https://img.1688.com/pic1.jpg'],
-      companyName: 'Factory Co Ltd',
-      location: 'Yiwu, Zhejiang',
-      variants: [
+  test('normalizes real actor output data correctly', () => {
+    const realActorItem = {
+      offerId: '123456789',
+      title: 'Real Actor 1688 Product',
+      mainImages: ['https://img.1688.com/main1.jpg', 'https://img.1688.com/main2.jpg'],
+      sellerUserId: 'user_12345',
+      sellerCompanyName: 'Factory Co Ltd Real',
+      sellerProvince: 'Zhejiang',
+      priceMin: 10.5,
+      priceMax: 20.0,
+      skus: [
         { skuId: 'sku1', price: 10.5, stock: 50 },
-        { skuId: 'sku2', price: 12.0, stock: 50 }
-      ],
-      price: 10.5
+        { skuId: 'sku2', price: 20.0, stock: 50 }
+      ]
     };
 
-    const result = normalizeApifyData(raw, '123456789');
+    const result = normalizeApifyData(realActorItem, '123456789');
     assert.equal(result.id, '123456789');
-    assert.equal(result.title, 'Test Wholesale Product');
-    assert.deepEqual(result.images, ['https://img.1688.com/pic1.jpg']);
-    assert.equal(result.supplier.name, 'Factory Co Ltd');
-    assert.equal(result.supplier.location, 'Yiwu, Zhejiang');
+    assert.equal(result.title, 'Real Actor 1688 Product');
+    assert.deepEqual(result.images, ['https://img.1688.com/main1.jpg', 'https://img.1688.com/main2.jpg']);
+    assert.deepEqual(result.supplier, {
+      id: 'user_12345',
+      name: 'Factory Co Ltd Real',
+      location: 'Zhejiang',
+      province: 'Zhejiang'
+    });
     assert.equal(result.variants.length, 2);
     assert.equal(result.inventory.total, 100);
     assert.equal(result.inventory.available, true);
     assert.equal(result.pricing.min, 10.5);
-    assert.equal(result.pricing.max, 12.0);
+    assert.equal(result.pricing.max, 20.0);
     assert.equal(result.logistics.origin, 'CN');
   });
 });
@@ -110,22 +116,30 @@ describe('Fastify Server Routes', () => {
   });
 
   test('POST /api/1688/product succeeds with mocked Apify client', async () => {
+    let capturedInput = null;
+
     const mockApifyClient = {
       actor: () => ({
-        call: async () => ({
-          defaultDatasetId: 'dataset-123'
-        })
+        call: async (input) => {
+          capturedInput = input;
+          return {
+            defaultDatasetId: 'dataset-123'
+          };
+        }
       }),
       dataset: () => ({
         listItems: async () => ({
           items: [
             {
-              id: '123456789',
+              offerId: '123456789',
               title: 'Sample Product',
-              images: ['http://example.com/image.jpg'],
-              companyName: 'Sample Supplier',
-              location: 'Guangzhou',
-              variants: [{ skuId: 'sku-1', price: 15.0, stock: 10 }],
+              mainImages: ['http://example.com/image.jpg'],
+              sellerCompanyName: 'Sample Supplier',
+              sellerProvince: 'Guangzhou',
+              sellerUserId: 'supplier-001',
+              priceMin: 15.0,
+              priceMax: 15.0,
+              skus: [{ skuId: 'sku-1', price: 15.0, stock: 10 }],
               inventory: { total: 10, available: true },
               logistics: { weight_kg: 0.5, origin: 'CN' }
             }
@@ -142,10 +156,17 @@ describe('Fastify Server Routes', () => {
     });
 
     assert.equal(response.statusCode, 200);
+    assert.deepEqual(capturedInput, { productUrls: ['https://detail.1688.com/offer/123456789.html'] });
     const body = response.json();
     assert.equal(body.success, true);
     assert.equal(body.product.id, '123456789');
     assert.equal(body.product.title, 'Sample Product');
+    assert.deepEqual(body.product.supplier, {
+      id: 'supplier-001',
+      name: 'Sample Supplier',
+      location: 'Guangzhou',
+      province: 'Guangzhou'
+    });
     assert.equal(body.meta.provider, 'apify:zen-studio');
   });
 
