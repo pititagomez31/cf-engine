@@ -17,21 +17,27 @@ function parseNumericPrice(val) {
   return 0;
 }
 
-function parseImageUrl(img) {
-  if (typeof img === 'string' && img.trim()) {
-    const trimmed = img.trim();
-    if (trimmed.startsWith('//')) return `https:${trimmed}`;
-    return trimmed;
-  }
-  if (img && typeof img === 'object') {
-    const url = img.fullPathImageURI || img.imageURI || img.url || img.src || img.link || '';
-    if (typeof url === 'string' && url.trim()) {
-      const trimmed = url.trim();
-      if (trimmed.startsWith('//')) return `https:${trimmed}`;
-      return trimmed;
-    }
-  }
-  return null;
+function extractImages(item) {
+  const raw = item.mainImages || item.images || item.imageUrls || item.mainImage || item.image || [];
+  const arr = Array.isArray(raw) ? raw : [raw];
+  return arr
+    .map(img => {
+      if (typeof img === 'string' && img.trim()) {
+        const trimmed = img.trim();
+        if (trimmed.startsWith('//')) return `https:${trimmed}`;
+        return trimmed;
+      }
+      if (img && typeof img === 'object') {
+        const url = img.url || img.fullPathImageURI || img.imageURI || img.src || img.link || '';
+        if (typeof url === 'string' && url.trim()) {
+          const trimmed = url.trim();
+          if (trimmed.startsWith('//')) return `https:${trimmed}`;
+          return trimmed;
+        }
+      }
+      return null;
+    })
+    .filter((url) => Boolean(url && typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))));
 }
 
 export function normalizeApifyData(rawData, offerId) {
@@ -43,20 +49,7 @@ export function normalizeApifyData(rawData, offerId) {
     const title = item.title || item.subject || item.name || '';
 
     // Images
-    let rawImageCandidates = [];
-    if (Array.isArray(item.mainImages) && item.mainImages.length > 0) {
-      rawImageCandidates = item.mainImages;
-    } else if (Array.isArray(item.images) && item.images.length > 0) {
-      rawImageCandidates = item.images;
-    } else if (Array.isArray(item.imageUrls) && item.imageUrls.length > 0) {
-      rawImageCandidates = item.imageUrls;
-    } else if (item.mainImage || item.image) {
-      rawImageCandidates = [item.mainImage || item.image];
-    }
-
-    let images = rawImageCandidates
-      .map(parseImageUrl)
-      .filter((url) => Boolean(url));
+    const images = extractImages(item);
 
     if (images.length === 0 && process.env.NODE_ENV !== 'production') {
       const imageKeys = Object.keys(item).filter(k => k.toLowerCase().includes('image'));
@@ -103,8 +96,8 @@ export function normalizeApifyData(rawData, offerId) {
     }
 
     const currency = item.pricing?.currency || item.currency || 'CNY';
-    const tiers = Array.isArray(item.pricing?.tiers || item.priceTiers || item.priceRange)
-      ? (item.pricing?.tiers || item.priceTiers || item.priceRange)
+    const tiers = Array.isArray(item.priceTiers || item.pricing?.tiers || item.priceRange)
+      ? (item.priceTiers || item.pricing?.tiers || item.priceRange)
       : [];
 
     const pricing = {
