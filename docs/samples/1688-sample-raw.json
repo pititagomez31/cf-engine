@@ -1,0 +1,39 @@
+{
+  "offerId": "1070327476039",
+  "subject": "1688 Wholesale Wireless Headphones Waterproof Noise Cancelling",
+  "mainImages": [
+    "https://cbu001.alicdn.com/img/ibank/O1CN01xxx1.jpg",
+    "https://cbu001.alicdn.com/img/ibank/O1CN01xxx2.jpg"
+  ],
+  "images": [
+    { "fullPathImageURI": "https://cbu001.alicdn.com/img/ibank/O1CN01xxx1.jpg" },
+    { "fullPathImageURI": "https://cbu001.alicdn.com/img/ibank/O1CN01xxx2.jpg" }
+  ],
+  "sellerUserId": "221789012",
+  "sellerCompanyName": "Shenzhen Electronics Wholesale Factory Co., Ltd.",
+  "sellerProvince": "Guangdong",
+  "shopName": "Shenzhen Electronics Factory Direct",
+  "priceMin": 12.5,
+  "priceMax": 18.0,
+  "priceTiers": [
+    { "minQuantity": 2, "price": "18.00" },
+    { "minQuantity": 100, "price": "12.50" }
+  ],
+  "skus": [
+    {
+      "skuId": "31001",
+      "price": 12.5,
+      "stock": 500,
+      "name": "Black / Standard"
+    },
+    {
+      "skuId": "31002",
+      "price": 18.0,
+      "stock": 350,
+      "name": "White / Pro"
+    }
+  ],
+  "totalStock": 850,
+  "weight": 0.35,
+  "origin": "CN"
+}

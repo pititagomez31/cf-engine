@@ -1,8 +1,14 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { extractOfferId } from '../src/utils/extractOfferId.js';
 import { buildApp } from '../src/server.js';
 import { normalizeApifyData } from '../src/services/apify1688.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('extractOfferId utility', () => {
   test('extracts numeric offerId from valid 1688 URLs', () => {
@@ -64,6 +70,53 @@ describe('normalizeApifyData', () => {
     assert.equal(result.pricing.min, 10.5);
     assert.equal(result.pricing.max, 20.0);
     assert.equal(result.logistics.origin, 'CN');
+  });
+
+  test('normalizes raw data with object images, string prices, and stock fallbacks', () => {
+    const rawWithObjImages = {
+      offerId: '1070327476039',
+      subject: 'Sample 1688 Item with Complex Image Objects',
+      images: [
+        { fullPathImageURI: '//cbu001.alicdn.com/img/ibank/O1CN01.jpg' },
+        { imageURI: 'https://cbu001.alicdn.com/img/ibank/O1CN02.jpg' }
+      ],
+      shopName: 'Shenzhen Tech Supplier',
+      priceTiers: [{ price: '¥15.50' }],
+      skuInfo: {
+        skuList: [
+          { skuId: 'sku-A', price: '15.50', stock: '100' },
+          { skuId: 'sku-B', price: '18.00', stock: '200' }
+        ]
+      }
+    };
+
+    const result = normalizeApifyData(rawWithObjImages, '1070327476039');
+    assert.equal(result.id, '1070327476039');
+    assert.equal(result.title, 'Sample 1688 Item with Complex Image Objects');
+    assert.deepEqual(result.images, [
+      'https://cbu001.alicdn.com/img/ibank/O1CN01.jpg',
+      'https://cbu001.alicdn.com/img/ibank/O1CN02.jpg'
+    ]);
+    assert.equal(result.supplier.name, 'Shenzhen Tech Supplier');
+    assert.equal(result.pricing.min, 15.5);
+    assert.equal(result.pricing.max, 18);
+    assert.equal(result.inventory.total, 300);
+    assert.equal(result.inventory.available, true);
+  });
+
+  test('normalizes real sample raw file docs/samples/1688-sample-raw.json correctly', () => {
+    const rawFilePath = path.join(__dirname, '../../docs/samples/1688-sample-raw.json');
+    const rawContent = fs.readFileSync(rawFilePath, 'utf8');
+    const sampleRaw = JSON.parse(rawContent);
+
+    const result = normalizeApifyData(sampleRaw, '1070327476039');
+
+    assert.equal(result.id, '1070327476039');
+    assert.ok(result.images.length > 0, 'images array should not be empty');
+    assert.ok(result.images.every(img => img.startsWith('https://')), 'all images must be absolute https URLs');
+    assert.ok(result.pricing.min > 0, 'pricing.min must be greater than 0');
+    assert.ok(result.supplier.name && result.supplier.name !== 'Unknown Supplier', 'supplier.name should be populated');
+    assert.ok(result.inventory.total > 0, 'inventory.total should be greater than 0');
   });
 });
 

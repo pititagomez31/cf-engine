@@ -4,5 +4,7 @@ node_modules/
 *.log
 .next/
 frontend/.next/
+frontend/.next
 dist/
 build/
+backend/logs/
