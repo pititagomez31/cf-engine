@@ -56,14 +56,17 @@ export function normalizeApifyData(rawData, offerId) {
       console.warn('[NORMALIZATION_WARN] No valid images extracted. Keys containing "image":', imageKeys);
     }
 
-    // Supplier (4 fields)
-    const supplierId = item.sellerUserId ? String(item.sellerUserId) : (item.sellerMemberId ? String(item.sellerMemberId) : null);
-    const supplierName = item.sellerCompanyName || item.supplier?.name || item.companyName || item.sellerName || item.seller?.name || item.shopName || 'Proveedor 1688';
-    const supplierLocation = item.sellerProvince || item.supplier?.location || item.location || item.city || item.province || item.seller?.location || null;
-    const supplierProvince = item.sellerProvince || item.supplier?.province || item.province || null;
+    // Supplier
+    const sup = item.supplier && typeof item.supplier === 'object' ? item.supplier : {};
+    const supplierId = sup.userId || sup.memberId || item.sellerUserId || (item.sellerMemberId ? String(item.sellerMemberId) : null);
+    const supplierName = sup.companyName || sup.loginId || item.sellerCompanyName || item.supplier?.name || item.companyName || item.sellerName || item.seller?.name || item.shopName || 'Proveedor 1688';
+
+    const locationParts = [item.province, item.city].filter(Boolean).join('');
+    const supplierLocation = item.shipping?.location || sup.address || locationParts || item.sellerProvince || item.supplier?.location || item.location || null;
+    const supplierProvince = item.province || item.sellerProvince || item.supplier?.province || null;
 
     const supplier = {
-      id: supplierId,
+      id: supplierId ? String(supplierId) : null,
       name: supplierName,
       location: supplierLocation,
       province: supplierProvince
@@ -75,15 +78,17 @@ export function normalizeApifyData(rawData, offerId) {
     if (Array.isArray(rawVariants) && rawVariants.length > 0) {
       variants = rawVariants.map(v => ({
         sku: String(v.skuId || v.sku || v.id || v.name || ''),
-        price: parseNumericPrice(v.price || v.consignPrice || v.salePrice || item.priceMin || item.price || 0),
+        price: parseNumericPrice(v.price || v.consignPrice || v.salePrice || item.priceMin || item.price?.min || 0),
         stock: parseNumericPrice(v.stock || v.canBookCount || v.amount || 0)
       }));
     }
 
     // Pricing & Tiers
+    const priceObj = item.price && typeof item.price === 'object' ? item.price : {};
     const variantPrices = variants.map(v => v.price).filter(p => !isNaN(p) && p > 0);
-    const rawMin = item.priceMin ?? item.pricing?.min ?? item.minPrice ?? item.price ?? item.currentPrice ?? item.priceTiers?.[0]?.price;
-    const rawMax = item.priceMax ?? item.pricing?.max ?? item.maxPrice;
+
+    const rawMin = priceObj.min ?? item.priceMin ?? item.pricing?.min ?? item.minPrice ?? item.price ?? item.currentPrice ?? item.priceTiers?.[0]?.price;
+    const rawMax = priceObj.max ?? item.priceMax ?? item.pricing?.max ?? item.maxPrice;
 
     let minPrice = parseNumericPrice(rawMin);
     let maxPrice = parseNumericPrice(rawMax);
@@ -95,10 +100,19 @@ export function normalizeApifyData(rawData, offerId) {
       maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : minPrice;
     }
 
-    const currency = item.pricing?.currency || item.currency || 'CNY';
-    const tiers = Array.isArray(item.priceTiers || item.pricing?.tiers || item.priceRange)
-      ? (item.priceTiers || item.pricing?.tiers || item.priceRange)
-      : [];
+    const currency = priceObj.currency || item.pricing?.currency || item.currency || 'CNY';
+
+    let tiers = [];
+    if (Array.isArray(item.quantityPrices)) {
+      tiers = item.quantityPrices
+        .filter(t => t && typeof t.price === 'number')
+        .map(t => ({
+          minQuantity: typeof t.quantityMin === 'number' ? t.quantityMin : 0,
+          price: t.price
+        }));
+    } else if (Array.isArray(item.priceTiers || item.pricing?.tiers || item.priceRange)) {
+      tiers = item.priceTiers || item.pricing?.tiers || item.priceRange;
+    }
 
     const pricing = {
       min: isNaN(minPrice) ? 0 : minPrice,
@@ -109,7 +123,7 @@ export function normalizeApifyData(rawData, offerId) {
 
     // Inventory
     const variantStockSum = variants.length ? variants.reduce((sum, v) => sum + (v.stock || 0), 0) : 0;
-    const rawTotalStock = item.inventory?.total ?? item.totalStock ?? item.canBookCount ?? item.stock ?? item.skuInfo?.totalStock;
+    const rawTotalStock = item.stock ?? item.inventory?.total ?? item.totalStock ?? item.canBookCount ?? item.skuInfo?.totalStock;
 
     let totalStock = parseNumericPrice(rawTotalStock);
     if (totalStock === 0 && variantStockSum > 0) {
@@ -118,14 +132,17 @@ export function normalizeApifyData(rawData, offerId) {
 
     const inventory = {
       total: totalStock,
-      available: item.inventory?.available ?? (totalStock > 0)
+      available: item.inventory?.available ?? (totalStock > 0 || item.isOutOfStock === false)
     };
 
     // Logistics
-    const weight_kg = item.logistics?.weight_kg ?? item.weight ?? null;
+    const weight_kg = typeof item.unitWeight === 'number' ? item.unitWeight : (item.logistics?.weight_kg ?? item.weight ?? null);
     const logistics = {
       weight_kg: weight_kg !== null && !isNaN(Number(weight_kg)) ? Number(weight_kg) : null,
-      origin: item.logistics?.origin || item.origin || 'CN'
+      origin: 'CN',
+      shipping_location: item.shipping?.location || null,
+      post_fee_cny: typeof item.shipping?.postFee === 'number' ? item.shipping.postFee : null,
+      is_free_shipping: typeof item.shipping?.isFreeShipping === 'boolean' ? item.shipping.isFreeShipping : null
     };
 
     const normalized = ProductSchema.parse({

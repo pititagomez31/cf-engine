@@ -32,7 +32,10 @@ export const InventorySchema = z.object({
 
 export const LogisticsSchema = z.object({
   weight_kg: z.number().nullable().default(null),
-  origin: z.string().default('CN')
+  origin: z.string().default('CN'),
+  shipping_location: z.string().nullable().default(null),
+  post_fee_cny: z.number().nullable().default(null),
+  is_free_shipping: z.boolean().nullable().default(null)
 });
 
 export const ProductSchema = z.object({

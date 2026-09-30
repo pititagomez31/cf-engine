@@ -114,9 +114,16 @@ describe('normalizeApifyData', () => {
     assert.equal(result.id, '1070327476039');
     assert.ok(result.images.length > 0, 'images array should not be empty');
     assert.ok(result.images.every(img => img.startsWith('https://')), 'all images must be absolute https URLs');
-    assert.ok(result.pricing.min > 0, 'pricing.min must be greater than 0');
-    assert.ok(result.supplier.name && result.supplier.name !== 'Unknown Supplier', 'supplier.name should be populated');
-    assert.ok(result.inventory.total > 0, 'inventory.total should be greater than 0');
+    assert.equal(result.pricing.min, 176);
+    assert.equal(result.pricing.max, 176);
+    assert.equal(result.pricing.tiers.length, 1);
+    assert.equal(result.pricing.tiers[0].price, 176);
+    assert.equal(result.supplier.name, '佩加数字科技(深圳)有限公司');
+    assert.equal(result.supplier.id, '2222165456364');
+    assert.equal(result.supplier.location, '广东深圳');
+    assert.equal(result.inventory.total, 499);
+    assert.equal(result.logistics.post_fee_cny, 5);
+    assert.equal(result.logistics.shipping_location, '广东深圳');
   });
 });
 

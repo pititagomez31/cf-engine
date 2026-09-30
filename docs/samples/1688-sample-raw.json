@@ -9,31 +9,38 @@
     { "fullPathImageURI": "https://cbu001.alicdn.com/img/ibank/O1CN01xxx1.jpg" },
     { "fullPathImageURI": "https://cbu001.alicdn.com/img/ibank/O1CN01xxx2.jpg" }
   ],
-  "sellerUserId": "221789012",
-  "sellerCompanyName": "Shenzhen Electronics Wholesale Factory Co., Ltd.",
-  "sellerProvince": "Guangdong",
-  "shopName": "Shenzhen Electronics Factory Direct",
-  "priceMin": 12.5,
-  "priceMax": 18.0,
+  "sellerUserId": "2222165456364",
+  "sellerCompanyName": "佩加数字科技(深圳)有限公司",
+  "sellerProvince": "广东",
+  "shopName": "佩加数字科技",
+  "price": {
+    "min": 176,
+    "max": 176,
+    "currency": "CNY"
+  },
+  "quantityPrices": [
+    { "quantityRange": "≥1个", "quantityMin": 1, "quantityMax": null, "price": 176 }
+  ],
+  "priceMin": 176.0,
+  "priceMax": 176.0,
   "priceTiers": [
-    { "minQuantity": 2, "price": "18.00" },
-    { "minQuantity": 100, "price": "12.50" }
+    { "minQuantity": 1, "price": 176.0 }
   ],
   "skus": [
     {
       "skuId": "31001",
-      "price": 12.5,
-      "stock": 500,
-      "name": "Black / Standard"
-    },
-    {
-      "skuId": "31002",
-      "price": 18.0,
-      "stock": 350,
-      "name": "White / Pro"
+      "price": 176.0,
+      "stock": 499,
+      "name": "Standard / Black"
     }
   ],
-  "totalStock": 850,
+  "totalStock": 499,
+  "stock": 499,
   "weight": 0.35,
-  "origin": "CN"
+  "origin": "CN",
+  "shipping": {
+    "location": "广东深圳",
+    "postFee": 5,
+    "isFreeShipping": false
+  }
 }
