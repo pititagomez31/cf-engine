@@ -63,6 +63,12 @@ interface ScrapeErrorResponse {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+function getProxiedImageUrl(imageUrl: string): string {
+  if (!imageUrl) return '';
+  if (imageUrl.startsWith('data:') || imageUrl.startsWith('/')) return imageUrl;
+  return `${API_BASE_URL}/api/proxy/image?url=${encodeURIComponent(imageUrl)}`;
+}
+
 export default function HomePage() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -220,7 +226,7 @@ export default function HomePage() {
               <div className="aspect-square rounded-lg bg-slate-100 border border-slate-200 overflow-hidden relative">
                 {activeImage ? (
                   <img
-                    src={activeImage}
+                    src={getProxiedImageUrl(activeImage)}
                     alt={productData.product.title}
                     className="w-full h-full object-cover"
                   />
@@ -240,7 +246,7 @@ export default function HomePage() {
                         activeImage === img ? 'border-slate-900 ring-2 ring-slate-900/20' : 'border-slate-200'
                       }`}
                     >
-                      <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                      <img src={getProxiedImageUrl(img)} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

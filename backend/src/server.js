@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { productRoutes } from './routes/products.js';
+import proxyRoutes from './routes/proxy.js';
 
 dotenv.config();
 
@@ -27,6 +28,9 @@ export async function buildApp(options = {}) {
 
   // Product routes
   await fastify.register(productRoutes, options);
+
+  // Image proxy routes under /api
+  await fastify.register(proxyRoutes, { prefix: '/api' });
 
   return fastify;
 }
