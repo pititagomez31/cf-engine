@@ -216,13 +216,28 @@ export async function fetchAndNormalize1688Product(url, offerId, options = {}) {
     throw apifyErr;
   }
 
+  const runId = run?.id || run?.defaultDatasetId || null;
+
   if (!items.length) {
-    const apifyErr = new Error('APIFY_ERROR');
-    apifyErr.details = 'No items returned from scraper';
-    throw apifyErr;
+    const notFoundErr = new Error('PRODUCT_NOT_FOUND');
+    notFoundErr.offerId = offerId;
+    notFoundErr.runId = runId;
+    notFoundErr.details = 'The product was not found on 1688 or the Actor could not retrieve it.';
+    throw notFoundErr;
   }
 
-  const firstItem = items[0];
+  const firstItem = items[0] || {};
+  const itemOfferId = firstItem.offerId || firstItem.id;
+  const itemTitle = firstItem.title || firstItem.subject || firstItem.name;
+  const extractedImgs = extractImages(firstItem);
+
+  if (!itemOfferId && !itemTitle && extractedImgs.length === 0) {
+    const notFoundErr = new Error('PRODUCT_NOT_FOUND');
+    notFoundErr.offerId = offerId;
+    notFoundErr.runId = runId;
+    notFoundErr.details = 'The product was not found on 1688 or the Actor could not retrieve it.';
+    throw notFoundErr;
+  }
 
   if (process.env.NODE_ENV === 'development') {
     try {

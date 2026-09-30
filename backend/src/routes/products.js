@@ -46,6 +46,14 @@ export async function productRoutes(fastify, options) {
         }
       });
     } catch (err) {
+      if (err.message === 'PRODUCT_NOT_FOUND') {
+        return reply.code(404).send({
+          success: false,
+          error: 'PRODUCT_NOT_FOUND',
+          message: 'El producto no se encontró en 1688 o ya no está disponible.'
+        });
+      }
+
       if (err.message === 'APIFY_ERROR') {
         return reply.code(502).send({
           error: 'APIFY_ERROR',

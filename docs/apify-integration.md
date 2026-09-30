@@ -29,3 +29,14 @@ This document outlines the field mapping from the raw dataset output of the Apif
 | `logistics.post_fee_cny` | `item.shipping?.postFee` | `number \| null` |
 | `logistics.is_free_shipping` | `item.shipping?.isFreeShipping` | `boolean \| null` |
 | `variants` | `item.skus` mapped to `{ sku, price, stock }` | `object[]` |
+
+## Error Response Handling
+
+When calling `POST /api/1688/product`:
+
+| Status Code | Error Code | Description |
+|---|---|---|
+| **400 Bad Request** | `MISSING_URL` / `INVALID_1688_URL` / `OFFER_ID_NOT_FOUND` | URL validation or offer ID extraction failure. |
+| **404 Not Found** | `PRODUCT_NOT_FOUND` | The Apify Actor returned zero items, or the returned item is missing critical product fields (`offerId`, `title`, and `images`). Returns `{ "success": false, "error": "PRODUCT_NOT_FOUND", "message": "El producto no se encontró en 1688 o ya no está disponible." }`. |
+| **502 Bad Gateway** | `APIFY_ERROR` | Scraper Actor call or dataset fetch failed. |
+| **500 Internal Error** | `NORMALIZATION_ERROR` | Schema validation error during normalization. |
